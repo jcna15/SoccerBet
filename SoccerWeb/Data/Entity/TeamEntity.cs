@@ -1,5 +1,6 @@
 ﻿namespace SoccerBet.Web.Data.Entity
 {
+    using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
 
     public class TeamEntity
@@ -12,5 +13,7 @@
 
         [Display(Name = "Logo")]
         public string LogoPath { get; set; }
+
+        public ICollection<GroupDetailEntity> GroupDetails { get; set; }
     }
 }
