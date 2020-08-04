@@ -10,8 +10,8 @@ using SoccerBet.Web.Data;
 namespace SoccerBet.Web.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20200408183911_TournamentEntities")]
-    partial class TournamentEntities
+    [Migration("20200804041605_InitialDb")]
+    partial class InitialDb
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
