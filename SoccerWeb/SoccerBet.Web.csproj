@@ -5,13 +5,20 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Data\Model\**" />
+    <Content Remove="Data\Model\**" />
+    <EmbeddedResource Remove="Data\Model\**" />
+    <None Remove="Data\Model\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.1.2" PrivateAssets="All" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.1.10" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Data\Model\" />
+    <Folder Include="wwwroot\images\Teams\" />
   </ItemGroup>
 
 </Project>

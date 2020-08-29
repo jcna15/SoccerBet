@@ -1,28 +1,34 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SoccerBet.Web.Data;
 using SoccerBet.Web.Data.Entity;
+using SoccerBet.Web.Helpers;
+using SoccerBet.Web.Models;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace SoccerBet.Web.Controllers
 {
     public class TeamsController : Controller
     {
         private readonly DataContext _context;
+        private readonly IImageHelper _imageHelper;
+        private readonly IConverterHelper _converterHelper;
 
-        public TeamsController(DataContext context)
+        public TeamsController(DataContext context,
+            IImageHelper imageHelper,
+            IConverterHelper converterHelper)
         {
             _context = context;
+            _imageHelper = imageHelper;
+            _converterHelper = converterHelper;
         }
 
         // GET: Teams
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Teams.ToListAsync());
+            return View(await _context.Teams.OrderBy(t=>t.Name).ToListAsync());
         }
 
         // GET: Teams/Details/5
@@ -50,10 +56,19 @@ namespace SoccerBet.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(TeamEntity teamEntity)
+        public async Task<IActionResult> Create(TeamViewModel teamEntity)
         {
             if (ModelState.IsValid)
             {
+                var path = string.Empty;
+
+                if (teamEntity.LogoFile != null)
+                {
+                    path = await _imageHelper.UploadImageAsync(teamEntity.LogoFile, "Teams");
+                }
+
+                var team = _converterHelper.ToTeamEntity(teamEntity, path, true);
+
                 _context.Add(teamEntity);
                 try
                 {
@@ -89,21 +104,26 @@ namespace SoccerBet.Web.Controllers
             {
                 return NotFound();
             }
-            return View(teamEntity);
+            TeamViewModel model = _converterHelper.ToTeamViewModel(teamEntity);
+            return View(model);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, TeamEntity teamEntity)
+        public async Task<IActionResult> Edit(TeamViewModel model)
         {
-            if (id != teamEntity.Id)
-            {
-                return NotFound();
-            }
-
             if (ModelState.IsValid)
             {
-                _context.Update(teamEntity);
+                var path = model.LogoPath;
+
+                if (model.LogoFile != null)
+                {
+                    path = await _imageHelper.UploadImageAsync(model.LogoFile, "Teams");
+                }
+
+                TeamEntity team = _converterHelper.ToTeamEntity(model, path, false);
+                _context.Update(team);
+
                 try
                 {
                     await _context.SaveChangesAsync();
@@ -111,10 +131,9 @@ namespace SoccerBet.Web.Controllers
                 }
                 catch (Exception ex)
                 {
-
                     if (ex.InnerException.Message.Contains("duplicate"))
                     {
-                        ModelState.AddModelError(string.Empty, $"Already exists the team: {teamEntity.Name}.");
+                        ModelState.AddModelError(string.Empty, $"Already exists the team: {model.Name}.");
                     }
                     else
                     {
@@ -122,7 +141,8 @@ namespace SoccerBet.Web.Controllers
                     }
                 }
             }
-            return View(teamEntity);
+
+            return View(model);
         }
 
         // GET: Teams/Delete/5
@@ -140,7 +160,9 @@ namespace SoccerBet.Web.Controllers
                 return NotFound();
             }
 
-            return View(teamEntity);
+            _context.Teams.Remove(teamEntity);
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
         }
 
         // POST: Teams/Delete/5
